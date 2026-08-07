@@ -1,0 +1,1332 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Valentine Pixel Quest</title>
+
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16'%3E%3Ctext y='13' font-size='13'%3E%F0%9F%92%96%3C/text%3E%3C/svg%3E" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet" />
+
+  <style>
+    :root {
+      --pink: #ff7ac2;
+      --pink-dark: #d94f96;
+      --cream: #fff1f7;
+      --black: #111111;
+      --yellow: #ffd166;
+      --cyan: #7ae0ff;
+      --green: #7dff8a;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      margin: 0;
+      overflow-x: hidden;
+      font-family: "Press Start 2P", cursive;
+      color: var(--black);
+      background:
+        radial-gradient(circle at top, rgba(255, 255, 255, .25), transparent 30%),
+        linear-gradient(180deg, #ffb7e0 0%, #ff7ac2 45%, #ff5db1 100%);
+      cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20'%3E%3Ctext y='16' font-size='16'%3E%F0%9F%92%96%3C/text%3E%3C/svg%3E") 10 10, auto;
+    }
+
+    button {
+      cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20'%3E%3Ctext y='16' font-size='16'%3E%F0%9F%92%96%3C/text%3E%3C/svg%3E") 10 10, pointer;
+    }
+
+    section {
+      min-height: 100vh;
+      position: relative;
+      display: grid;
+      place-items: center;
+      align-content: center;
+      gap: 24px;
+      padding: 48px 16px;
+    }
+
+    .card {
+      width: min(96vw, 860px);
+      background: var(--cream);
+      border: 4px solid #000;
+      box-shadow: 10px 10px 0 #000;
+      padding: 24px;
+      text-align: center;
+    }
+
+    h1, h2 { margin: 0 0 18px; line-height: 1.55; font-size: clamp(18px, 3vw, 30px); }
+    p, li, button, .status { line-height: 1.8; font-size: 12px; }
+
+    button {
+      font: inherit;
+      color: #000;
+      background: var(--yellow);
+      border: 4px solid #000;
+      box-shadow: 5px 5px 0 #000;
+      padding: 12px 16px;
+    }
+
+    button:active { transform: translate(3px, 3px); box-shadow: 2px 2px 0 #000; }
+    button:disabled { opacity: .65; cursor: not-allowed; }
+
+    .locked { pointer-events: none; filter: grayscale(.8) opacity(.55); }
+
+    .locked::after {
+      content: "🔒 ЗАКРЫТО";
+      position: absolute;
+      inset: 0;
+      z-index: 20;
+      display: grid;
+      place-items: center;
+      font-size: 24px;
+      color: #fff;
+      text-shadow: 3px 3px #000;
+      background: rgba(0, 0, 0, .28);
+    }
+
+    #errorBanner {
+      position: fixed;
+      left: 50%;
+      top: 18px;
+      transform: translateX(-50%);
+      z-index: 999;
+      display: none;
+      width: min(92vw, 620px);
+      background: #fff;
+      border: 4px solid #000;
+      box-shadow: 8px 8px 0 #000;
+      padding: 14px;
+    }
+
+    #errorBanner .title {
+      margin: -14px -14px 10px;
+      padding: 6px 8px;
+      background: #000080;
+      color: #fff;
+      font-size: 11px;
+    }
+
+    .pixel-bit { position: fixed; width: 8px; height: 8px; z-index: 998; pointer-events: none; }
+
+    .player {
+      display: none;
+      margin: 22px auto 0;
+      width: min(100%, 420px);
+      background: #262626;
+      color: var(--green);
+      border: 4px solid #000;
+      box-shadow: 8px 8px 0 #000;
+      padding: 16px;
+    }
+
+    .cassette {
+      position: relative;
+      width: 220px;
+      height: 120px;
+      margin: 14px auto;
+      background: #f4a6d8;
+      border: 4px solid #000;
+    }
+
+    .cassette::before,
+    .cassette::after {
+      content: "";
+      position: absolute;
+      top: 42px;
+      width: 30px;
+      height: 30px;
+      border: 4px solid #000;
+      border-radius: 50%;
+      background: #fff;
+      animation: spin 1.1s linear infinite paused;
+    }
+
+    .cassette::before { left: 32px; }
+    .cassette::after { right: 32px; }
+
+    .player.playing .cassette::before,
+    .player.playing .cassette::after { animation-play-state: running; }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .reels { display: flex; gap: 10px; justify-content: center; margin: 14px 0; }
+
+    .reel {
+      width: 64px;
+      height: 64px;
+      display: grid;
+      place-items: center;
+      font-size: 30px;
+      background: #fff;
+      border: 4px solid #000;
+      box-shadow: 4px 4px 0 #000;
+    }
+
+    .slot-screen {
+      display: grid;
+      place-items: center;
+      min-height: 110px;
+      margin: 14px 0;
+      padding: 16px;
+      background: #111;
+      color: var(--green);
+      border: 4px solid #000;
+      font-size: 14px;
+      line-height: 1.8;
+    }
+
+    .slot-screen.jackpot {
+      font-size: clamp(24px, 6vw, 40px);
+      color: #ffd166;
+      background: #2b1055;
+      border-color: #ffd166;
+      animation: jackpotBlink .5s steps(2) infinite;
+    }
+
+    @keyframes jackpotBlink {
+      50% { color: #ff7ac2; box-shadow: 0 0 0 4px #ff7ac2; }
+    }
+
+    .hearts-bar { display: flex; gap: 6px; justify-content: center; margin: 10px 0 16px; flex-wrap: wrap; }
+
+    .h-heart {
+      width: 16px;
+      height: 15px;
+      background: #e7cddc;
+      clip-path: polygon(50% 100%, 0 35%, 12% 0, 50% 22%, 88% 0, 100% 35%);
+    }
+
+    .h-heart.filled { background: #ff4fa0; }
+
+    .counter { margin: 6px 0 12px; color: var(--pink-dark); }
+
+    .stage {
+      position: relative;
+      width: min(96vw, 900px);
+      height: 420px;
+      margin: 0 auto;
+      overflow: hidden;
+      background: linear-gradient(180deg, #8fe3ff 0%, #c9f5ff 58%, #f8feff 100%);
+      border: 4px solid #000;
+      box-shadow: 10px 10px 0 #000;
+      touch-action: none;
+    }
+
+    .ground {
+      position: absolute;
+      left: 0; right: 0; bottom: 0;
+      z-index: 2;
+      height: 50px;
+      background: repeating-linear-gradient(90deg, #5add7f 0 16px, #47c76a 16px 32px);
+      border-top: 4px solid #000;
+      box-shadow: inset 0 10px 0 rgba(255, 255, 255, .10);
+    }
+
+    .sling {
+      position: absolute;
+      left: 101px; top: 180px;
+      width: 8px; height: 120px;
+      background: linear-gradient(#b07a44, #8b5e3c);
+      border: 3px solid #000;
+      box-shadow: 3px 3px 0 rgba(0, 0, 0, .22);
+    }
+
+    .bird {
+      position: absolute;
+      left: 80px; top: 250px;
+      z-index: 5;
+      width: 42px; height: 42px;
+      display: grid;
+      place-items: center;
+      font-size: 34px;
+      line-height: 1;
+      cursor: grab;
+      user-select: none;
+      filter: drop-shadow(3px 3px 0 rgba(0, 0, 0, .22));
+    }
+
+    .bird:active { cursor: grabbing; }
+
+    .castle {
+      position: absolute;
+      right: 40px; bottom: 50px;
+      z-index: 3;
+      display: grid;
+      grid-template-columns: repeat(11, 22px);
+      grid-auto-rows: 22px;
+      gap: 2px;
+    }
+
+    .block {
+      width: 22px; height: 22px;
+      border: 3px solid #000;
+      box-shadow:
+        inset 3px 3px 0 rgba(255, 255, 255, .45),
+        inset -4px -5px 0 rgba(0, 0, 0, .16),
+        2px 2px 0 rgba(0, 0, 0, .18);
+    }
+
+    .block.wood { background: linear-gradient(135deg, #e8b06a 0%, #c08040 60%, #a76a2e 100%); }
+    .block.ice { background: linear-gradient(135deg, #e8fdff 0%, #a8efff 45%, #7cdff6 100%); }
+    .block.stone { background: linear-gradient(135deg, #d6d6d6 0%, #a8a8a8 50%, #8a8a8a 100%); }
+
+    .block.bonus {
+      background: linear-gradient(135deg, #ffe89a 0%, #ffd166 60%, #f4b942 100%);
+      display: grid;
+      place-items: center;
+      font-size: 8px;
+    }
+
+    .block.ice.cracked {
+      background:
+        repeating-linear-gradient(45deg, rgba(255, 255, 255, .35) 0 4px, rgba(0, 0, 0, .08) 4px 8px),
+        linear-gradient(135deg, #d4f8ff, #87e2f7);
+      filter: saturate(.82) brightness(.94);
+    }
+
+    .kiss {
+      position: absolute;
+      right: 128px; bottom: 132px;
+      z-index: 2;
+      font-size: 34px;
+      animation: kissPulse 1.5s ease-in-out infinite;
+      filter: drop-shadow(3px 3px 0 rgba(0, 0, 0, .18));
+      pointer-events: none;
+    }
+
+    @keyframes kissPulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.12); }
+    }
+
+    .boom { animation: boom .5s forwards; }
+
+    @keyframes boom {
+      to {
+        transform: translate(var(--tx, 0), var(--ty, 0)) rotate(var(--rot, 0deg)) scale(0);
+        opacity: 0;
+      }
+    }
+
+    .dot {
+      position: absolute;
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: rgba(0, 0, 0, .35);
+      z-index: 4;
+      display: none;
+      pointer-events: none;
+    }
+
+    .game-overlay {
+      position: absolute;
+      inset: 0;
+      z-index: 12;
+      display: none;
+      place-items: center;
+      background: rgba(0, 0, 0, .55);
+      color: #fff;
+      font-size: 28px;
+      text-shadow: 3px 3px #000;
+    }
+
+    .game-overlay.show { display: grid; animation: blinkText .6s steps(2) infinite; }
+    @keyframes blinkText { 50% { opacity: .35; } }
+
+    .reward { display: none; margin-top: 16px; color: var(--pink-dark); }
+    .reward.fail { margin-top: 10px; color: #7f4f66; }
+
+    .hud {
+      position: absolute;
+      left: 12px; top: 12px;
+      z-index: 9;
+      background: #fff;
+      border: 3px solid #000;
+      box-shadow: 4px 4px 0 #000;
+      padding: 8px 10px;
+      font-size: 10px;
+      line-height: 1.6;
+    }
+
+    .cloud, .hill { pointer-events: none; }
+
+    .cloud {
+      position: absolute;
+      z-index: 1;
+      width: 42px; height: 24px;
+      background: #fff;
+      border: 3px solid #000;
+      box-shadow: 4px 4px 0 rgba(0, 0, 0, .12);
+    }
+
+    .cloud::before,
+    .cloud::after {
+      content: "";
+      position: absolute;
+      background: #fff;
+      border: 3px solid #000;
+    }
+
+    .cloud::before { left: -18px; top: 8px; width: 26px; height: 18px; }
+    .cloud::after { right: -20px; top: 5px; width: 30px; height: 20px; }
+
+    .cloud-1 { left: 110px; top: 42px; }
+    .cloud-2 { right: 145px; top: 16px; transform: scale(.82); }
+
+    .hill {
+      position: absolute;
+      z-index: 1;
+      border: 4px solid #000;
+      border-bottom: none;
+      border-radius: 999px 999px 0 0;
+      background: linear-gradient(#83e39d, #57cf79);
+      opacity: .72;
+    }
+
+    .hill-1 { left: -50px; bottom: 46px; width: 190px; height: 78px; }
+    .hill-2 { right: 105px; bottom: 46px; width: 230px; height: 102px; opacity: .52; }
+
+    .coupons {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 18px;
+      width: min(96vw, 980px);
+    }
+
+    .coupon {
+      position: relative;
+      min-height: 200px;
+      padding: 18px;
+      background: #fff;
+      border: 4px dashed #000;
+    }
+
+    .coupon::before {
+      content: "";
+      position: absolute;
+      left: 0; right: 0; top: 50%;
+      border-top: 4px dashed rgba(0, 0, 0, .22);
+    }
+
+    .coupon.used {
+      background: #ffe3f2;
+      clip-path: polygon(0 0, 100% 0, 100% 35%, 92% 50%, 100% 65%, 100% 100%, 0 100%, 0 65%, 8% 50%, 0 35%);
+    }
+
+    .coupon.tearing { animation: tear .6s; }
+
+    @keyframes tear {
+      0% { transform: none; }
+      25% { transform: rotate(-2deg) translateY(2px); }
+      55% { transform: rotate(2deg) translateY(5px); }
+      100% { transform: none; }
+    }
+
+    .small { color: #5a5a5a; font-size: 10px; line-height: 1.8; }
+    .validity { margin-top: 8px; font-size: 9px; color: #8a6076; line-height: 1.6; }
+
+    .qr {
+      display: block;
+      width: 96px; height: 96px;
+      margin: 12px auto 0;
+      background: #fff;
+      border: 4px solid #000;
+      box-shadow: 4px 4px 0 #000;
+      image-rendering: pixelated;
+    }
+
+    .coupon-message {
+      display: none;
+      margin-top: 18px;
+      background: #fff;
+      border: 4px solid #000;
+      box-shadow: 6px 6px 0 #000;
+      padding: 14px;
+      color: var(--pink-dark);
+      line-height: 1.7;
+    }
+
+    .letter-text {
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 16px;
+      line-height: 1.9;
+      text-align: left;
+    }
+
+    .star {
+      position: fixed;
+      width: 3px; height: 3px;
+      background: #fff;
+      z-index: 0;
+      pointer-events: none;
+      animation: twinkle 2s infinite;
+    }
+
+    @keyframes twinkle { 50% { opacity: .15; } }
+
+    body.night { background: linear-gradient(180deg, #140a2e 0%, #2b1055 60%, #3b1668 100%); }
+    body.night .card { background: #2a1745; color: #ffeaf7; }
+    body.night .small, body.night .validity { color: #d9b8cc; }
+    body.night .coupon { background: #3a2158; }
+    body.night .coupon.used { background: #4a2a68; }
+    body.night .coupon-message { background: #3a2158; }
+    body.night .hud { background: #2a1745; color: #ffeaf7; }
+    body.night .stage { background: linear-gradient(180deg, #101c4a 0%, #2b1055 70%, #3b1668 100%); }
+    body.night .reward { color: #ffb3dd; }
+  </style>
+</head>
+<body>
+  <div id="errorBanner">
+    <div class="title">Ошибка 520: LoveServer</div>
+    <div id="errorText">Отказы не принимаются.</div>
+  </div>
+
+  <section id="act1">
+    <div class="card">
+      <h1 id="question"></h1>
+      <p>(Словно есть выбор)</p>
+
+      <div style="display:flex; gap:16px; justify-content:center; flex-wrap:wrap;">
+        <button id="yesBtn">Да</button>
+        <button id="noBtn">Нет</button>
+      </div>
+
+      <div class="player" id="player">
+        <div id="trackTitle">LOVE-FM · кассетный режим</div>
+        <div class="cassette"></div>
+
+        <div style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap;">
+          <button id="prevTrack">⏮</button>
+          <button id="toggleMusic">Пауза</button>
+          <button id="nextTrack">⏭</button>
+        </div>
+
+        <audio id="bgMusic"></audio>
+      </div>
+    </div>
+  </section>
+
+  <section id="act2" class="locked">
+    <div class="card">
+      <h2>Почему я тебя люблю.</h2>
+      <p>Жми рычаг.</p>
+
+      <div class="reels">
+        <div class="reel" id="reel0">💖</div>
+        <div class="reel" id="reel1">😊</div>
+        <div class="reel" id="reel2">🌸</div>
+      </div>
+
+      <div class="slot-screen" id="slotScreen">Причина появится здесь</div>
+      <div class="hearts-bar" id="heartsBar"></div>
+      <div class="counter" id="slotCounter">0 / 10</div>
+
+      <button id="leverBtn">🎰 Крутить рычаг</button>
+    </div>
+  </section>
+
+  <section id="act3" class="locked">
+    <div class="card">
+      <h2>Злые птички пародия играть сердце бой битва</h2>
+      <p>Перетащи птичку назад, как рогатку, и отпусти.</p>
+      <p>Цель: доберись сердечком до поцелуя 💋</p>
+
+      <div class="stage" id="stage">
+        <div class="cloud cloud-1"></div>
+        <div class="cloud cloud-2"></div>
+        <div class="hill hill-1"></div>
+        <div class="hill hill-2"></div>
+
+        <div class="sling"></div>
+        <div class="bird" id="bird">❤</div>
+        <div class="castle" id="castle"></div>
+        <div class="kiss" id="kiss">💋</div>
+        <div class="ground"></div>
+
+        <div class="hud" id="shotsHud">Выстрелов осталось: 3</div>
+        <div class="game-overlay" id="gameOverlay"></div>
+      </div>
+
+      <div class="reward" id="reward">Уровень пройден! Награда: Поцелуй 💋</div>
+      <div class="reward fail" id="failReward" style="display:none;">ну и ладно :)</div>
+    </div>
+  </section>
+
+  <section id="act4" class="locked">
+    <div class="card">
+      <h2>Купоны желаний</h2>
+      <p>На выбор доступен только 1 купон.</p>
+      <div class="coupon-message" id="couponMessage">сделай скринпшот и пришли мне</div>
+      <p><button id="secretBtn" style="display:none;">…или открой письмо</button></p>
+    </div>
+
+    <div class="coupons" id="coupons"></div>
+  </section>
+
+  <section id="act5" style="display:none;">
+    <div class="card">
+      <h2>Секрет</h2>
+      <div class="letter-text">
+        Ты же и сама знаешь, как мне нравишься
+        <br /><br />
+        Я сделал этот сайт, потому что ты это давно просила.
+        Каждая причина любить тебя — настоящая. Но они не единственные.
+        <br /><br />
+        Спасибо, что ты есть. Ты — моя любимая причина улыбаться каждый день.
+        <br /><br />
+        Люблю
+      </div>
+    </div>
+  </section>
+
+  <script>
+    const CONFIG = {
+      tracks: [
+        { title: "Песня 1", src: "song1.mp3" },
+        { title: "Песня 2", src: "song2.mp3" },
+        { title: "Песня 3", src: "song3.mp3" }
+      ],
+
+      reasons: [
+        "Причина 1: твоя улыбка",
+        "Причина 2: твой смех",
+        "Причина 3: твой характер",
+        "Причина 4: твои объятия",
+        "Причина 5: твои сообщения",
+        "Причина 6: твоя забота",
+        "Причина 7: твой голос",
+        "Причина 8: твои идеи",
+        "Причина 9: твоё сердце",
+        "Причина 10: ты сама"
+      ],
+
+      coupons: [
+        { title: "Купон на чай.", note: "Вкусный клубничный чай, купим -когда нибудь." },
+        { title: "Купон на фильм", note: "Выберу сам, так и будет." },
+        { title: "Купон на пиццу", note: "закажешь какую хочешь." },
+        { title: "Купон на прогулку", note: "прогуляемся по твоим местам." }
+      ]
+    };
+
+    const $ = (id) => document.getElementById(id);
+
+    const sections = {
+      act1: $("act1"),
+      act2: $("act2"),
+      act3: $("act3"),
+      act4: $("act4"),
+      act5: $("act5")
+    };
+
+    function unlock(name, delay = 0) {
+      setTimeout(() => {
+        sections[name].classList.remove("locked");
+        sections[name].scrollIntoView({ behavior: "smooth" });
+      }, delay);
+    }
+
+    function vibrate(pattern) {
+      if (navigator.vibrate) navigator.vibrate(pattern);
+    }
+
+    function toast(text) {
+      const t = document.createElement("div");
+      t.textContent = text;
+      t.style.cssText =
+        "position:fixed; bottom:18px; left:50%; transform:translateX(-50%); z-index:1000; background:#fff; border:4px solid #000; box-shadow:6px 6px 0 #000; padding:10px 14px; font-size:10px;";
+      document.body.appendChild(t);
+      setTimeout(() => t.remove(), 2600);
+    }
+
+    function pixelBurst(x, y) {
+      const colors = ["#ff5c5c", "#ffd166", "#7ae0ff", "#7dff8a", "#ff7ac2"];
+      for (let i = 0; i < 36; i++) {
+        const bit = document.createElement("div");
+        bit.className = "pixel-bit";
+        bit.style.left = `${x}px`;
+        bit.style.top = `${y}px`;
+        bit.style.background = colors[i % colors.length];
+        document.body.appendChild(bit);
+        const angle = Math.random() * Math.PI * 2;
+        const dist = 50 + Math.random() * 120;
+        bit.animate(
+          [
+            { transform: "translate(0, 0)", opacity: 1 },
+            { transform: `translate(${Math.cos(angle) * dist}px, ${Math.sin(angle) * dist + 80}px)`, opacity: 0 }
+          ],
+          { duration: 600 + Math.random() * 500, easing: "cubic-bezier(.2,.8,.8,1)" }
+        ).finished.then(() => bit.remove());
+      }
+    }
+
+    function heartRain() {
+      for (let i = 0; i < 36; i++) {
+        const h = document.createElement("div");
+        h.textContent = "💖";
+        h.style.cssText = "position:fixed; top:-30px; left:" + Math.random() * 100 + "vw; z-index:997; font-size:" + (12 + Math.random() * 18) + "px; pointer-events:none;";
+        document.body.appendChild(h);
+        h.animate(
+          [{ transform: "translateY(0)", opacity: 1 }, { transform: "translateY(115vh)", opacity: .9 }],
+          { duration: 2500 + Math.random() * 2000, delay: Math.random() * 800, easing: "linear", fill: "both" }
+        ).finished.then(() => h.remove());
+      }
+    }
+
+    function showError(text) {
+      $("errorText").textContent = text;
+      $("errorBanner").style.display = "block";
+      setTimeout(() => { $("errorBanner").style.display = "none"; }, 900);
+    }
+
+    let audioCtx = null;
+
+    function beep(freq = 440, duration = 0.08, type = "square") {
+      try {
+        window.AudioContext = window.AudioContext || window.webkitAudioContext;
+        audioCtx = audioCtx || new window.AudioContext();
+        if (audioCtx.state === "suspended") audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = type;
+        osc.frequency.value = freq;
+        gain.gain.value = 0.04;
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
+        osc.stop(audioCtx.currentTime + duration + 0.01);
+      } catch (error) {}
+    }
+
+    function jingle() {
+      [523, 659, 784, 1046].forEach((f, i) => setTimeout(() => beep(f, 0.12), i * 120));
+    }
+
+    function tearSound() {
+      try {
+        window.AudioContext = window.AudioContext || window.webkitAudioContext;
+        audioCtx = audioCtx || new window.AudioContext();
+        const dur = 0.25;
+        const buffer = audioCtx.createBuffer(1, audioCtx.sampleRate * dur, audioCtx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < data.length; i++) data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / data.length, 2);
+        const src = audioCtx.createBufferSource();
+        src.buffer = buffer;
+        const gain = audioCtx.createGain();
+        gain.gain.value = 0.15;
+        src.connect(gain);
+        gain.connect(audioCtx.destination);
+        src.start();
+      } catch (e) {}
+    }
+
+    (function initNight() {
+      const hour = new Date().getHours();
+      if (hour >= 18 || hour < 6) {
+        document.body.classList.add("night");
+        for (let i = 0; i < 70; i++) {
+          const s = document.createElement("div");
+          s.className = "star";
+          s.style.left = Math.random() * 100 + "vw";
+          s.style.top = Math.random() * 100 + "vh";
+          s.style.animationDelay = Math.random() * 2 + "s";
+          document.body.appendChild(s);
+        }
+      }
+    })();
+
+    window.addEventListener("scroll", () => {
+      const y = window.scrollY;
+      const c1 = document.querySelector(".cloud-1");
+      const c2 = document.querySelector(".cloud-2");
+      const h1 = document.querySelector(".hill-1");
+      const h2 = document.querySelector(".hill-2");
+      if (c1) c1.style.transform = `translateY(${y * 0.05}px)`;
+      if (c2) c2.style.transform = `translateY(${y * 0.08}px) scale(.82)`;
+      if (h1) h1.style.transform = `translateY(${y * 0.02}px)`;
+      if (h2) h2.style.transform = `translateY(${y * 0.03}px)`;
+    }, { passive: true });
+
+    const konami = ["arrowup", "arrowup", "arrowdown", "arrowdown", "arrowleft", "arrowright", "arrowleft", "arrowright", "b", "a"];
+    let kIndex = 0;
+    window.addEventListener("keydown", (e) => {
+      const key = e.key.toLowerCase();
+      if (key === konami[kIndex]) {
+        kIndex++;
+        if (kIndex === konami.length) {
+          kIndex = 0;
+          toast("СЕКРЕТНЫЙ КОД ПРИНЯТ 💖");
+          heartRain();
+          jingle();
+          vibrate([80, 40, 80]);
+        }
+      } else {
+        kIndex = key === konami[0] ? 1 : 0;
+      }
+    });
+
+    let agreed = false;
+    const yesBtn = $("yesBtn");
+    const noBtn = $("noBtn");
+    const player = $("player");
+    const bgMusic = $("bgMusic");
+    const toggleMusic = $("toggleMusic");
+    const trackTitle = $("trackTitle");
+    const prevTrack = $("prevTrack");
+    const nextTrack = $("nextTrack");
+    let currentTrack = 0;
+
+    (function typewriter() {
+      const text = "Ты будешь моей Валентинкой?";
+      const el = $("question");
+      let i = 0;
+      const t = setInterval(() => {
+        el.textContent = text.slice(0, i + 1);
+        if (i % 2 === 0) beep(600 + Math.random() * 200, 0.02);
+        i++;
+        if (i >= text.length) clearInterval(t);
+      }, 60);
+    })();
+
+    let noEscapes = 0;
+    noBtn.addEventListener("pointerenter", () => {
+      if (noEscapes >= 3 || agreed) return;
+      noEscapes++;
+      const dx = (Math.random() * 2 - 1) * 120;
+      const dy = (Math.random() * 2 - 1) * 60;
+      noBtn.style.transform = `translate(${dx}px, ${dy}px)`;
+      beep(200 + noEscapes * 60, 0.05);
+      vibrate(30);
+    });
+
+    function getTracks() {
+      if (Array.isArray(CONFIG.tracks) && CONFIG.tracks.length > 0) return CONFIG.tracks;
+      return [{ title: "LOVE-FM", src: "music.mp3" }];
+    }
+
+    function updateTrackTitle() {
+      const tracks = getTracks();
+      if (trackTitle) trackTitle.textContent = `${currentTrack + 1}/${tracks.length} · ${tracks[currentTrack].title}`;
+    }
+
+    function updateToggleLabel() {
+      if (!toggleMusic) return;
+      toggleMusic.textContent = bgMusic.paused ? "Играть" : "Пауза";
+    }
+
+    function loadTrack(index, autoplay = false) {
+      const tracks = getTracks();
+      currentTrack = ((index % tracks.length) + tracks.length) % tracks.length;
+      bgMusic.src = tracks[currentTrack].src;
+      updateTrackTitle();
+      if (autoplay) bgMusic.play().catch(() => {});
+      updateToggleLabel();
+    }
+
+    function playCurrent() {
+      if (!bgMusic.src) loadTrack(0, false);
+      if (player) player.classList.add("playing");
+      bgMusic.play().catch(() => {});
+      updateToggleLabel();
+    }
+
+    function pauseCurrent() {
+      bgMusic.pause();
+      if (player) player.classList.remove("playing");
+      updateToggleLabel();
+    }
+
+    bgMusic.addEventListener("play", () => { if (player) player.classList.add("playing"); updateToggleLabel(); });
+    bgMusic.addEventListener("pause", () => { if (player) player.classList.remove("playing"); updateToggleLabel(); });
+    bgMusic.addEventListener("ended", () => loadTrack(currentTrack + 1, true));
+
+    function accept() {
+      if (agreed) return;
+      agreed = true;
+      if (player) player.style.display = "block";
+      loadTrack(0, true);
+      unlock("act2", 800);
+    }
+
+    yesBtn.addEventListener("click", (event) => {
+      pixelBurst(event.clientX || innerWidth / 2, event.clientY || innerHeight / 2);
+      beep(700, 0.08);
+      accept();
+    });
+
+    noBtn.addEventListener("click", (event) => {
+      noBtn.disabled = true;
+      pixelBurst(event.clientX || innerWidth / 2, event.clientY || innerHeight / 2);
+      showError("Ответ не принят.");
+      beep(120, 0.12);
+      vibrate(100);
+      setTimeout(() => yesBtn.click(), 900);
+    });
+
+    if (toggleMusic) toggleMusic.addEventListener("click", () => bgMusic.paused ? playCurrent() : pauseCurrent());
+    if (prevTrack) prevTrack.addEventListener("click", () => loadTrack(currentTrack - 1, true));
+    if (nextTrack) nextTrack.addEventListener("click", () => loadTrack(currentTrack + 1, true));
+
+    /* ===== Акт 2: рулетка с джекпотом на 10-й попытке ===== */
+
+    const REEL_EMOJIS = ["💖", "😊", "🌸", "⭐", "🎀", "🍓", "", "💫"];
+    const reels = [$("reel0"), $("reel1"), $("reel2")];
+    const heartsBar = $("heartsBar");
+    CONFIG.reasons.forEach(() => {
+      const s = document.createElement("span");
+      s.className = "h-heart";
+      heartsBar.appendChild(s);
+    });
+
+    let reasonIndex = 0;
+    let spinning = false;
+    const leverBtn = $("leverBtn");
+    const slotScreen = $("slotScreen");
+    const slotCounter = $("slotCounter");
+
+    leverBtn.addEventListener("click", () => {
+      if (spinning || reasonIndex >= CONFIG.reasons.length) return;
+      spinning = true;
+      leverBtn.disabled = true;
+      const reelStopped = [false, false, false];
+      let ticks = 0;
+      const maxTicks = 14 + reasonIndex * 2;
+
+      const spin = setInterval(() => {
+        reels.forEach((r, ri) => {
+          if (!reelStopped[ri]) r.textContent = REEL_EMOJIS[Math.floor(Math.random() * REEL_EMOJIS.length)];
+          if (ticks > 8 + ri * 4 && !reelStopped[ri]) {
+            reelStopped[ri] = true;
+            r.textContent = REEL_EMOJIS[(reasonIndex + ri) % REEL_EMOJIS.length];
+          }
+        });
+
+        slotScreen.textContent = CONFIG.reasons[(reasonIndex + ticks) % CONFIG.reasons.length];
+        beep(300 + ticks * 25, 0.03);
+        ticks++;
+
+        if (ticks >= maxTicks) {
+          clearInterval(spin);
+          reasonIndex++;
+          slotCounter.textContent = `${reasonIndex} / ${CONFIG.reasons.length}`;
+          if (heartsBar.children[reasonIndex - 1]) heartsBar.children[reasonIndex - 1].classList.add("filled");
+          spinning = false;
+
+          if (reasonIndex >= CONFIG.reasons.length) {
+            // ДЖЕКПОТ на 10-й попытке
+            slotScreen.classList.add("jackpot");
+            slotScreen.textContent = "Ты сама";
+            toast("🎰 ДЖЕКПОТ! 🎰");
+            heartRain();
+            pixelBurst(innerWidth / 2, innerHeight / 2);
+            jingle();
+            vibrate([60, 40, 60, 40, 120]);
+
+            leverBtn.textContent = "Все причины получены";
+            leverBtn.disabled = true;
+            unlock("act3", 2000);
+          } else {
+            slotScreen.textContent = CONFIG.reasons[reasonIndex - 1];
+            jingle();
+            leverBtn.disabled = false;
+          }
+        }
+      }, 80);
+    });
+
+    /* ===== Акт 3: победа = добраться до поцелуя ===== */
+
+    const castlePattern = [
+      "...........",
+      ".WW.....WW.",
+      "WIWW...WWIW",
+      "WWIWWWWWIWW",
+      "WIBWWSWWBIW",
+      ".WWIWBWIWW.",
+      "..WWIWIWW..",
+      "...WWWWW...",
+      "....WIW....",
+      ".....W....."
+    ];
+
+    const castle = $("castle");
+    castle.innerHTML = "";
+    castlePattern.forEach((row) => {
+      [...row].forEach((cell) => {
+        if (cell === ".") {
+          castle.appendChild(document.createElement("div"));
+          return;
+        }
+        const block = document.createElement("div");
+        if (cell === "W") block.className = "block wood";
+        if (cell === "I") block.className = "block ice";
+        if (cell === "S") block.className = "block stone";
+        if (cell === "B") {
+          block.className = "block bonus";
+          block.textContent = "+1";
+        }
+        castle.appendChild(block);
+      });
+    });
+
+    const stage = $("stage");
+    const bird = $("bird");
+    const kiss = $("kiss");
+    const reward = $("reward");
+    const failReward = $("failReward");
+    const shotsHud = $("shotsHud");
+    const gameOverlay = $("gameOverlay");
+
+    const dots = [];
+    for (let i = 0; i < 24; i++) {
+      const d = document.createElement("div");
+      d.className = "dot";
+      stage.appendChild(d);
+      dots.push(d);
+    }
+
+    let dragging = false;
+    let flying = false;
+    let act3Finished = false;
+    let startX = 0, startY = 0, pullX = 0, pullY = 0;
+    let shotsLeft = 3;
+    let animationId = null;
+    const baseX = 80;
+    const baseY = 250;
+    const velocityScale = 0.15;
+    const gravity = 0.45;
+
+    function updateShotsHud() {
+      if (shotsHud) shotsHud.textContent = `Выстрелов осталось: ${shotsLeft}`;
+    }
+
+    function cancelFlight() {
+      if (animationId) {
+        cancelAnimationFrame(animationId);
+        animationId = null;
+      }
+    }
+
+    function hideTrajectory() {
+      dots.forEach((d) => (d.style.display = "none"));
+    }
+
+    function updateTrajectory() {
+      let x = baseX + pullX;
+      let y = baseY + pullY;
+      let vx = -pullX * velocityScale;
+      let vy = -pullY * velocityScale;
+      const groundY = stage.clientHeight - 50;
+      let placed = 0;
+      for (let step = 0; step < 90 && placed < dots.length; step++) {
+        x += vx;
+        y += vy;
+        vy += gravity;
+        if (step % 3 === 0) {
+          dots[placed].style.display = "block";
+          dots[placed].style.left = `${x}px`;
+          dots[placed].style.top = `${y}px`;
+          placed++;
+        }
+        if (y > groundY) break;
+      }
+      for (let i = placed; i < dots.length; i++) dots[i].style.display = "none";
+    }
+
+    updateShotsHud();
+
+    bird.addEventListener("pointerdown", (event) => {
+      if (act3Finished || flying) return;
+      dragging = true;
+      startX = event.clientX;
+      startY = event.clientY;
+      bird.setPointerCapture(event.pointerId);
+    });
+
+    bird.addEventListener("pointermove", (event) => {
+      if (!dragging || act3Finished || flying) return;
+      pullX = event.clientX - startX;
+      pullY = event.clientY - startY;
+      pullX = Math.max(-150, Math.min(90, pullX));
+      pullY = Math.max(-130, Math.min(130, pullY));
+      bird.style.transform = `translate(${pullX}px, ${pullY}px)`;
+      updateTrajectory();
+    });
+
+    bird.addEventListener("pointerup", () => {
+      if (!dragging || act3Finished || flying) return;
+      dragging = false;
+      hideTrajectory();
+      const power = Math.hypot(pullX, pullY);
+      if (power < 30 || pullX > -10) {
+        bird.style.transform = "";
+        pullX = 0;
+        pullY = 0;
+        return;
+      }
+      launchBird();
+    });
+
+    function checkKissCollision(cx, cy) {
+      const kx = kiss.offsetLeft;
+      const ky = kiss.offsetTop;
+      const kw = kiss.offsetWidth;
+      const kh = kiss.offsetHeight;
+      return cx >= kx - 6 && cx <= kx + kw + 6 && cy >= ky - 6 && cy <= ky + kh + 6;
+    }
+
+    function reachKiss(x, y) {
+      cancelFlight();
+
+      bird.style.left = `${x - bird.offsetWidth / 2}px`;
+      bird.style.top = `${y - bird.offsetHeight / 2}px`;
+
+      const stageRect = stage.getBoundingClientRect();
+      pixelBurst(stageRect.left + x, stageRect.top + y);
+
+      kiss.animate(
+        [{ transform: "scale(1)" }, { transform: "scale(1.6)" }, { transform: "scale(1.2)" }],
+        { duration: 700 }
+      );
+
+      beep(880, 0.15);
+      finishAct3(true);
+    }
+
+    function blockAt(cx, cy) {
+      const blocks = Array.from(document.querySelectorAll(".block:not(.boom)"));
+      for (const el of blocks) {
+        const bx = castle.offsetLeft + el.offsetLeft;
+        const by = castle.offsetTop + el.offsetTop;
+        if (cx >= bx - 8 && cx <= bx + el.offsetWidth + 8 && cy >= by - 8 && cy <= by + el.offsetHeight + 8) return el;
+      }
+      return null;
+    }
+
+    function launchBird() {
+      flying = true;
+      shotsLeft = Math.max(0, shotsLeft - 1);
+      updateShotsHud();
+      let x = baseX + pullX;
+      let y = baseY + pullY;
+      let vx = -pullX * velocityScale;
+      let vy = -pullY * velocityScale;
+      bird.style.transform = "";
+      bird.style.left = `${x}px`;
+      bird.style.top = `${y}px`;
+      const groundY = stage.clientHeight - 50;
+
+      function frame() {
+        if (act3Finished) return;
+        const prevX = x;
+        const prevY = y;
+        x += vx;
+        y += vy;
+        vy += gravity;
+        bird.style.left = `${x}px`;
+        bird.style.top = `${y}px`;
+        const centerX = x + bird.offsetWidth / 2;
+        const centerY = y + bird.offsetHeight / 2;
+        const speed = Math.hypot(vx, vy);
+
+        // Победа: сердечко дотронулось до поцелуя
+        if (checkKissCollision(centerX, centerY)) {
+          reachKiss(centerX, centerY);
+          return;
+        }
+
+        const hitEl = blockAt(centerX, centerY);
+
+        if (hitEl) {
+          if (hitEl.classList.contains("stone")) {
+            const bx = castle.offsetLeft + hitEl.offsetLeft;
+            const by = castle.offsetTop + hitEl.offsetTop;
+            const prevCX = prevX + bird.offsetWidth / 2;
+            const prevCY = prevY + bird.offsetHeight / 2;
+            if (prevCY <= by) { vy = -Math.abs(vy) * 0.55; y = by - bird.offsetHeight - 9; }
+            else if (prevCY >= by + hitEl.offsetHeight) { vy = Math.abs(vy) * 0.55; y = by + hitEl.offsetHeight + 9; }
+            else if (prevCX <= bx) { vx = -Math.abs(vx) * 0.55; x = bx - bird.offsetWidth - 9; }
+            else { vx = Math.abs(vx) * 0.55; x = bx + hitEl.offsetWidth + 9; }
+            beep(90, 0.05);
+          } else {
+            impact(centerX, centerY, speed);
+            return;
+          }
+        }
+
+        if (centerY >= groundY) {
+          impact(centerX, groundY, speed);
+          return;
+        }
+
+        if (x > stage.clientWidth + 140 || x < -140 || y > stage.clientHeight + 180) {
+          miss();
+          return;
+        }
+        animationId = requestAnimationFrame(frame);
+      }
+      animationId = requestAnimationFrame(frame);
+    }
+
+    function impact(x, y, speed) {
+      cancelFlight();
+      bird.style.display = "none";
+      const stageRect = stage.getBoundingClientRect();
+      pixelBurst(stageRect.left + x, stageRect.top + y);
+      beep(170, 0.16);
+      vibrate(60);
+      damageCastle(x, y, speed);
+
+      setTimeout(() => {
+        if (act3Finished) return;
+        if (shotsLeft <= 0) finishAct3(false);
+        else resetBird();
+      }, 650);
+    }
+
+    function miss() {
+      cancelFlight();
+      bird.style.display = "none";
+      beep(140, 0.12);
+      setTimeout(() => {
+        if (act3Finished) return;
+        if (shotsLeft <= 0) finishAct3(false);
+        else resetBird();
+      }, 400);
+    }
+
+    function resetBird() {
+      cancelFlight();
+      bird.style.display = "block";
+      bird.style.left = `${baseX}px`;
+      bird.style.top = `${baseY}px`;
+      bird.style.transform = "";
+      pullX = 0;
+      pullY = 0;
+      flying = false;
+    }
+
+    function destroyBlock(el, index) {
+      el.style.setProperty("--tx", `${Math.random() * 170 - 85}px`);
+      el.style.setProperty("--ty", `${Math.random() * -150 - 20}px`);
+      el.style.setProperty("--rot", `${Math.random() * 140 - 70}deg`);
+      setTimeout(() => el.classList.add("boom"), index * 16);
+    }
+
+    function damageCastle(impactX, impactY, speed) {
+      const alive = Array.from(document.querySelectorAll(".block:not(.stone):not(.boom)"));
+      if (!alive.length) return;
+      const radius = Math.max(42, Math.min(95, speed * 3.4));
+      const maxDestroy = Math.max(6, Math.min(22, Math.round(speed * 0.85)));
+      const candidates = alive
+        .map((el) => {
+          const x = castle.offsetLeft + el.offsetLeft + el.offsetWidth / 2;
+          const y = castle.offsetTop + el.offsetTop + el.offsetHeight / 2;
+          return { el, dist: Math.hypot(x - impactX, y - impactY) };
+        })
+        .sort((a, b) => a.dist - b.dist);
+
+      const toDestroy = candidates.filter((c) => c.dist <= radius).slice(0, maxDestroy);
+      toDestroy.forEach((item, index) => {
+        const el = item.el;
+        if (el.classList.contains("ice") && !el.classList.contains("cracked")) {
+          el.classList.add("cracked");
+          return;
+        }
+        if (el.classList.contains("bonus")) {
+          shotsLeft++;
+          updateShotsHud();
+          beep(980, 0.12);
+          toast("+1 выстрел!");
+        }
+        destroyBlock(el, index);
+      });
+
+      candidates.filter((c) => c.dist > radius && c.dist <= radius + 32).slice(0, 12).forEach((item) => {
+        if (item.el.classList.contains("ice")) item.el.classList.add("cracked");
+      });
+
+      kiss.animate([{ transform: "scale(1)" }, { transform: "scale(1.25)" }, { transform: "scale(1)" }], { duration: 450 });
+    }
+
+    function finishAct3(success) {
+      if (act3Finished) return;
+      act3Finished = true;
+      flying = false;
+      cancelFlight();
+      hideTrajectory();
+      gameOverlay.textContent = success ? "YOU WIN!" : "GAME OVER";
+      gameOverlay.classList.add("show");
+      if (success) { jingle(); vibrate([60, 40, 60, 40, 120]); }
+      else { beep(196, 0.25); vibrate(120); }
+
+      setTimeout(() => {
+        gameOverlay.classList.remove("show");
+        if (success) {
+          reward.style.display = "block";
+          failReward.style.display = "none";
+        } else {
+          failReward.style.display = "block";
+          reward.style.display = "none";
+        }
+        unlock("act4", 1000);
+      }, 1600);
+    }
+
+    /* ===== Акт 4: купоны ===== */
+
+    const couponsWrap = $("coupons");
+    let couponSelected = false;
+
+    CONFIG.coupons.forEach((coupon, index) => {
+      const article = document.createElement("article");
+      article.className = "coupon";
+      article.innerHTML = `
+        <h3 style="font-size:13px; line-height:1.7;">${coupon.title}</h3>
+        <p class="small">${coupon.note}</p>
+        <div class="validity">Срок действия: пока я тебя люблю (∞)</div>
+        <button data-coupon="${index}">Выбрать</button>
+      `;
+      couponsWrap.appendChild(article);
+    });
+
+    couponsWrap.addEventListener("click", (event) => {
+      const btn = event.target.closest("button[data-coupon]");
+      if (!btn || couponSelected) return;
+      couponSelected = true;
+      const card = btn.closest(".coupon");
+      const coupon = CONFIG.coupons[Number(btn.dataset.coupon)];
+      card.classList.add("used", "tearing");
+      tearSound();
+      vibrate(80);
+      btn.textContent = "Выбран";
+
+      document.querySelectorAll("#coupons button").forEach((button) => {
+        button.disabled = true;
+        if (button !== btn) button.textContent = "Недоступно";
+      });
+
+      const qr = document.createElement("img");
+      qr.className = "qr";
+      qr.alt = "QR купона";
+      qr.src = "https://api.qrserver.com/v1/create-qr-code/?size=96x96&data=" + encodeURIComponent(`Купон: ${coupon.title} — ${coupon.note} | Действителен до: ∞`);
+      card.appendChild(qr);
+
+      $("couponMessage").style.display = "block";
+      $("secretBtn").style.display = "inline-block";
+    });
+
+    $("secretBtn").addEventListener("click", () => {
+      sections.act5.style.display = "grid";
+      sections.act5.scrollIntoView({ behavior: "smooth" });
+      heartRain();
+      jingle();
+    });
+  </script>
+</body>
+</html>
